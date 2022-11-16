@@ -7,16 +7,18 @@ public class TaskThread implements Runnable {
     int currentBurstTime;
     int burstGoalTime;
     ArrayList<Semaphore> taskThreads;
+    ArrayList<Semaphore> taskThreadsFin;
 
 
 
     //Constructor is being generated from MAIN
-    public TaskThread(ArrayList<Semaphore> taskThreads, int totalBurstTime, int currentBurstTime, int burstGoalTime, int id){
+    public TaskThread(ArrayList<Semaphore> taskThreads, ArrayList<Semaphore> taskThreadsFin,int totalBurstTime, int currentBurstTime, int burstGoalTime, int id){
         this.taskThreads = taskThreads;
         this.totalBurstTime = totalBurstTime;
         this.currentBurstTime = currentBurstTime;
         this.burstGoalTime = burstGoalTime;
         this.id = id;
+        this.taskThreadsFin = taskThreadsFin;
     }
 
 
@@ -43,19 +45,24 @@ public class TaskThread implements Runnable {
 
     public int getId(){ return id;}
 
+    public String Tosting(){
+        return "ID:"+ id + "\tMax Burst:"+ totalBurstTime +  "\tCurrent Burst:" + currentBurstTime + "\tBurst Goal: "+burstGoalTime;
+    }
+
     @Override
     public void run() {
         //keeps track of the looping/time for each thread
-        taskThreads.get(id).acquireUninterruptibly();
+        //taskThreads.get(id).acquireUninterruptibly();
 
         while(currentBurstTime < totalBurstTime){
             taskThreads.get(id).acquireUninterruptibly();
 
-            for(int i = 0; i < burstGoalTime; i++){
-                System.out.println("burst (i): " + i);
+            for(int i = currentBurstTime; i < burstGoalTime; i++){
+                currentBurstTime++;
+                System.out.println("Thread "+id+ " Burst: " + currentBurstTime);
             }
 
-            taskThreads.get(id).release();
+            taskThreadsFin.get(id).release();
         }
     }
 }

@@ -22,27 +22,23 @@ public class Dispatcher implements Runnable {
     }
 
     public TaskThread FCFS() {
-        // semReadyQueue.acquire();
-        TaskThread thread = readyQueue.get(0);
-        //readyQueue.remove(0);
-        // semReadyQueue.release();
-        return thread;
+        TaskThread temp = readyQueue.get(0);
+        readyQueue.remove(0);
+        return temp;
     }
 
     public TaskThread SJF() {
-        // idea is to instantiate first thread as the one with the shortest time. Then go over ready queue to find the actual thread;
         TaskThread thread = readyQueue.get(0);
-        //int smallest = readyQueue.get(0).getTime();
+        int smallest = readyQueue.get(0).getTotalBurstTime();
         int index = 0;
         for (int i = 0; i < readyQueue.size(); i++) {
-            // if (readyQueue.get(i).getTime() < smallest){
-            //  thread = readyQueue.get(i);
-            //  smallest = readyQueue.get(i).getTime();
-            //   index =i;
-            // }
-
+            if (readyQueue.get(i).getTotalBurstTime() < smallest) {
+                thread = readyQueue.get(i);
+                smallest = readyQueue.get(i).getTotalBurstTime();
+                index = i;
+            }
         }
-        //readyQueue.remove(index);
+        readyQueue.remove(index);
         return thread;
     }
 
@@ -68,16 +64,16 @@ public class Dispatcher implements Runnable {
 
 
     public TaskThread RR() {
-            TaskThread thread = readyQueue.get(0);
+        TaskThread thread = readyQueue.get(0);
 
-            //if thread.getTime()-timeQuantum <= 0{
-            //  readyQueue.remove(0);
-            //}
-            //else{
-            //  readyQueue.add(thread); // question: do I (dispatcher) add it to end of RQ if its burst> time quantum
-            // readyQueue.remove(0);
-            //}
-            return thread;
+        //if thread.getTime()-timeQuantum <= 0{
+        //  readyQueue.remove(0);
+        //}
+        //else{
+        //  readyQueue.add(thread); // question: do I (dispatcher) add it to end of RQ if its burst> time quantum
+        // readyQueue.remove(0);
+        //}
+        return thread;
 
     }
 
@@ -115,200 +111,29 @@ public class Dispatcher implements Runnable {
                 if (algorithm == 1) {
                     TaskThread thread = FCFS();
                     // int threadID = FCFS();
-                } else if (algorithm == 2) {
+                    myCPU.setCurrentTaskID(thread);
+                } else if (algorithm == 3) {
                     TaskThread thread = SJF();
                     //int threadID = SJF();
-                } else if (algorithm == 3) {
-                    TaskThread thread = PSJF();
-
+                    myCPU.setCurrentTaskID(thread);
                 } else if (algorithm == 4) {
+                    TaskThread thread = PSJF();
+                    myCPU.setCurrentTaskID(thread);
+
+                } else if (algorithm == 2) {
                     TaskThread thread = RR();
+                    myCPU.setCurrentTaskID(thread);
                 }
 
                 removeThreadFromRQ(); //method to remove thread from RQ if task thread's current burst = total burst.
 
-                //myCPU.setCurrentTask(thread)
+
                 semCPUs.get(id).release();
                 semReadyQueue.release();
             }
-
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-
-
+        //System.out.println("Dispatcher "+id);
     }
-
-
-
-    /*
-    public int FCFS() {
-           // readyQueue.remove(0); //rather than removing directly from algorithm, use a method to check if current burst == total burst for thread
-            return 0;
-
-    }
-    public int SJF() {
-            // idea is to instantiate first thread as the one with shortest time. Then go over ready queue to find the actual thread;
-            TaskThread thread = readyQueue.get(0);
-            //int smallest = readyQueue.get(0).getTime();
-            int index =0;
-            for(int i = 0; i<readyQueue.size(); i++){
-
-              // if (readyQueue.get(i).getTime() < smallest){
-              //     thread = readyQueue.get(i);
-              //     smallest = readyQueue.get(i).getTime();
-              //     index =i;
-              // }
-
-            }
-            //readyQueue.remove(index);
-            return index;
-
-
-
-    }
-
-
-    //need help with this
-    public TaskThread PSJF() {
-        try {
-            semReadyQueue.acquire();
-
-            // idea is to instantiate first thread as the one with the shortest time. Then go over ready queue to find the actual thread with the shortest time;
-            TaskThread thread = readyQueue.get(0);
-            //int smallest = readyQueue.get(0).getTime();
-            int index =0;
-            for(int i = 0; i<readyQueue.size(); i++){
-
-               // if (readyQueue.get(i).getTime() < smallest){
-               //     thread = readyQueue.get(i);
-               //     smallest = readyQueue.get(i).getTime();
-               //     index =i;
-               // }
-             //
-            }
-            semReadyQueue.release();
-            return thread;
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-
-    }
-
-    public int RR() {
-
-            TaskThread thread= readyQueue.get(0);
-            return 0;
-
-            //if thread.getTime()-timeQuantum <= 0{
-            //  readyQueue.remove(0);
-            //}
-            //else{
-            //  readyQueue.add(thread); // question: do I (dispatcher) add it to end of RQ if its burst> time quantum
-            // readyQueue.remove(0);
-            //}
-
-
-    }
-*/
-
 }
-
-
-//--------------------------------
-/*
- public TaskThread FCFS() {
-        try {
-            semReadyQueue.acquire();
-            TaskThread thread = readyQueue.get(0);
-            readyQueue.remove(0);
-            semReadyQueue.release();
-            return thread;
-
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-
-    public TaskThread SJF() {
-        try {
-            semReadyQueue.acquire();
-
-            // idea is to instantiate first thread as the one with the shortest time. Then go over ready queue to find the actual thread;
-            TaskThread thread = readyQueue.get(0);
-            //int smallest = readyQueue.get(0).getTime();
-            int index = 0;
-            for (int i = 0; i < readyQueue.size(); i++) {
-
-                // if (readyQueue.get(i).getTime() < smallest){
-                //  thread = readyQueue.get(i);
-                //  smallest = readyQueue.get(i).getTime();
-                //   index =i;
-                // }
-
-            }
-            //readyQueue.remove(index);
-            semReadyQueue.release();
-            return thread;
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-
-
-    }
-
-
-    //need help with this
-    public TaskThread PSJF() {
-        try {
-            semReadyQueue.acquire();
-
-            // idea is to instantiate first thread as the one with the shortest time. Then go over ready queue to find the actual thread with the shortest time;
-            TaskThread thread = readyQueue.get(0);
-            //int smallest = readyQueue.get(0).getTime();
-            int index = 0;
-            for (int i = 0; i < readyQueue.size(); i++) {
-
-                //  if (readyQueue.get(i).getTime() < smallest){
-                //     thread = readyQueue.get(i);
-                //      smallest = readyQueue.get(i).getTime();
-                //      index =i;
-                // }
-
-            }
-            semReadyQueue.release();
-            return thread;
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-
-    }
-
-
-    public TaskThread RR() {
-
-        try {
-            semReadyQueue.acquire();
-            TaskThread thread = readyQueue.get(0);
-
-            //if thread.getTime()-timeQuantum <= 0{
-            //  readyQueue.remove(0);
-            //}
-            //else{
-            //  readyQueue.add(thread); // question: do I (dispatcher) add it to end of RQ if its burst> time quantum
-            // readyQueue.remove(0);
-            //}
-
-
-            semReadyQueue.release();
-            return thread;
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-
-
-    }
- */
-
-
