@@ -92,6 +92,7 @@ public class Dispatcher implements Runnable {
 
     @Override
     public void run() {
+        System.out.println("Dispatcher "+id+ " is using CPU "+myCPU.id);
         try {
             while (true) {
                 semDispatchers.get(id).acquire();
