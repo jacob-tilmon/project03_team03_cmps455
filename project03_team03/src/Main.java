@@ -40,10 +40,8 @@ public class Main {
 
     }
     public static void generation (int algo, int coreNum, int burstQuantum){
-        //System.out.println("generation reached 0");
         Random random = new Random();
         int numTasks = random.nextInt(25)+1;
-
         
         ArrayList<TaskThread> readyQueue = new ArrayList<>();
         ArrayList<Thread> tasks = new ArrayList<>();
@@ -62,15 +60,12 @@ public class Main {
             dispatchSem.add(dSem);
             cpuSem.add(cSem);
         }
-        //System.out.println("generation reached 1");
         for (int i = 0; i < numTasks; i++){
             Semaphore tSem = new Semaphore(0);
             Semaphore tSemf = new Semaphore(0);
             threadSem.add(tSem);
             threadSemFin.add(tSemf);
         }
-        //System.out.println("generation reached 2");
-
         for (int i = 0; i < numTasks; i++){
             int taskBurst = random.nextInt(50)+1;
             TaskThread t0 = new TaskThread(threadSem,threadSemFin,taskBurst,0,0,i);
@@ -78,8 +73,6 @@ public class Main {
             Thread t2 = new Thread(t0);
             tasks.add(t2);
         }
-        //System.out.println("generation reached 3");
-
         for (TaskThread t : readyQueue) System.out.println(t.Tosting());
 
         for (int i = 0; i < coreNum; i++){
@@ -91,18 +84,12 @@ public class Main {
             Thread d2 = new Thread(d1);
             dispatchers.add(d2);
         }
-        //System.out.println("generation reached 4");
         for (Thread t : tasks) t.start();
-        //System.out.println("generation reached 5");
-        for (Thread t : dispatchers) t.start();
-        //System.out.println("generation reached 6");
         for (Thread t : cpus) t.start();
-        //System.out.println("generation reached 7");
+        for (Thread t : dispatchers) t.start();
 
         for (Thread t : dispatchers) try {t.join(); } catch (Exception e) { System.out.println(e.getMessage());}
-        for (Thread t : cpus) try {t.interrupt(); } catch (Exception e) { System.out.println(e.getMessage());}
+        for (Thread t : cpus) try {t.join(); } catch (Exception e) { System.out.println(e.getMessage());}
         System.out.println("Program Finished");
-        //for (Thread t: cpus) t.interrupt();
-
     }
 }

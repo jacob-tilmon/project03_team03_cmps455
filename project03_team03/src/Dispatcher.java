@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 public class Dispatcher implements Runnable {
     int id;
@@ -10,6 +11,7 @@ public class Dispatcher implements Runnable {
     CPU myCPU;//= new CPU();
     int algorithm;
     ArrayList<TaskThread> readyQueue;
+    TaskThread currentTask;
 
 
     public Dispatcher(int id, int algorithm, CPU myCPU, ArrayList<TaskThread> readyQueue, ArrayList<Semaphore> semDispatchers, ArrayList<Semaphore> semCPU) {
@@ -58,31 +60,23 @@ public class Dispatcher implements Runnable {
             // }
 
         }
-        semReadyQueue.release();
         return thread;
     }
 
 
     public TaskThread RR() {
         TaskThread thread = readyQueue.get(0);
-
-        //if thread.getTime()-timeQuantum <= 0{
-        //  readyQueue.remove(0);
-        //}
-        //else{
-        //  readyQueue.add(thread); // question: do I (dispatcher) add it to end of RQ if its burst> time quantum
-        // readyQueue.remove(0);
-        //}
+        readyQueue.remove(0);
         return thread;
 
     }
 
 
-    public void removeThreadFromRQ() {
+    /*public void removeThreadFromRQ() {
         for (int i = 0; i < readyQueue.size(); i++) {
-            //if (readyQueue.get(i).currentBurst()== readyQueue.get(i).totalBurst()){
-            // readyQueue.remove(i);
-            // }
+            if (readyQueue.get(i).getCurrentBurstTime() == readyQueue.get(i).getTotalBurstTime()){
+                readyQueue.remove(i);
+            }
 
             // for RR
             // if (algorithm == 3){
@@ -94,46 +88,48 @@ public class Dispatcher implements Runnable {
             // }
             //}
         }
-    }
+    }*/
 
     @Override
     public void run() {
         try {
-            //
-
-            // acquire ready queue and loop until it has at threads
-            //semReadyQueue.acquire();
-
-            while (readyQueue.size() > 0) {
+            while (true) {
                 semDispatchers.get(id).acquire();
-                semReadyQueue.acquire();  //should this be here or before while loop?
+                if (semReadyQueue.tryAcquire(1, TimeUnit.SECONDS)) {  //should this be here or before while loop?
+                    if (currentTask != null && currentTask.getCurrentBurstTime() < currentTask.getTotalBurstTime()) {
+                        readyQueue.add(currentTask);
+                        currentTask = null;
+                    }
+                    //removeThreadFromRQ(); //method to remove thread from RQ if task thread's current burst = total burst.
+                    if (readyQueue.size() > 0) {
+                        if (algorithm == 1) {
+                            currentTask = FCFS();
+                            // int threadID = FCFS();
+                            myCPU.setCurrentTaskID(currentTask);
+                        } else if (algorithm == 3) {
+                            currentTask = SJF();
+                            //int threadID = SJF();
+                            myCPU.setCurrentTaskID(currentTask);
+                        } else if (algorithm == 4) {
+                            currentTask = PSJF();
+                            myCPU.setCurrentTaskID(currentTask);
+                        } else if (algorithm == 2) {
+                            currentTask = RR();
+                            myCPU.setCurrentTaskID(currentTask);
+                        }
+                    } else {
+                        semReadyQueue.release();
+                        break;
+                    }
 
-                if (algorithm == 1) {
-                    TaskThread thread = FCFS();
-                    // int threadID = FCFS();
-                    myCPU.setCurrentTaskID(thread);
-                } else if (algorithm == 3) {
-                    TaskThread thread = SJF();
-                    //int threadID = SJF();
-                    myCPU.setCurrentTaskID(thread);
-                } else if (algorithm == 4) {
-                    TaskThread thread = PSJF();
-                    myCPU.setCurrentTaskID(thread);
-
-                } else if (algorithm == 2) {
-                    TaskThread thread = RR();
-                    myCPU.setCurrentTaskID(thread);
+                    semCPUs.get(id).release();
+                    semReadyQueue.release();
                 }
-
-                removeThreadFromRQ(); //method to remove thread from RQ if task thread's current burst = total burst.
-
-
-                semCPUs.get(id).release();
-                semReadyQueue.release();
             }
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        //System.out.println("Dispatcher "+id);
+        myCPU.setStop(true);
+        //System.out.println("Dispatcher "+id+" has left loop.");
     }
 }

@@ -35,7 +35,8 @@ public class TaskThread implements Runnable {
     }
 
     public void setBurstGoalTime(int burstGoalTime){
-        this.burstGoalTime = burstGoalTime;
+        if (burstGoalTime < totalBurstTime) this.burstGoalTime = burstGoalTime;
+        else this.burstGoalTime = this.totalBurstTime;
     }
 
     //CPU uses this
@@ -57,12 +58,13 @@ public class TaskThread implements Runnable {
         while(currentBurstTime < totalBurstTime){
             taskThreads.get(id).acquireUninterruptibly();
 
-            for(int i = currentBurstTime; i < burstGoalTime; i++){
+            for(int i = currentBurstTime; i < burstGoalTime && i < totalBurstTime; i++){
                 currentBurstTime++;
                 System.out.println("Thread "+id+ " Burst: " + currentBurstTime);
             }
-
-            taskThreadsFin.get(id).release();
+            //if (currentBurstTime == totalBurstTime)
+                taskThreadsFin.get(id).release();
         }
+        //System.out.println("Thread "+id+ " has left loop.");
     }
 }
